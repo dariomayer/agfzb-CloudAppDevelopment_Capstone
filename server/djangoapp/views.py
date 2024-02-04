@@ -1,9 +1,11 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseForbidden, HttpResponseServerError
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 # from .models import related models
 # from .restapis import related methods
+from .models import CarDealer
+from .restapis import get_dealers_from_cf, get_dealer_by_id_from_cf, post_request
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
@@ -99,21 +101,78 @@ def registration_request(request):
             context['message'] = 'Registration failed due to an unexpected error.'
             return render(request, 'djangoapp/registration.html', context)
 
+#----------------------------------------------------------------------------------------------------------------------
 # Update the `get_dealerships` view to render the index page with a list of dealerships
+    # NOTE: ricorda di avviare la funzione functions/get-dealership.js con comando node get-dealership.js
 def get_dealerships(request):
-    context = {}
     if request.method == "GET":
-        return render(request, 'djangoapp/index.html', context)
-    
+        url = "http://127.0.0.1:3000/dealerships/get"
+        # Get dealers from the URL
+        dealerships = get_dealers_from_cf(url)
+        # Concat all dealer's short name
+        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        # Return a list of dealer short name
+        return HttpResponse(dealer_names)
 
 
-
-
+#----------------------------------------------------------------------------------------------------------------------
 # Create a `get_dealer_details` view to render the reviews of a dealer
 # def get_dealer_details(request, dealer_id):
-# ...
+    # NOTE: ricorda di avviare la funzione functions/reviews.py con comando python3.9 reviews.py
+def get_dealer_details(request, dealer_id):
+    if request.method == "GET":
+        url = "http://127.0.0.1:5000/api/get_reviews"
+        # Get reviews by dealer id from the URL
+        reviews = get_dealer_by_id_from_cf(url, dealer_id)
+        # Extract the review and sentiment for each review
+        review_sentiment_pairs = []
+        for review in reviews:
+            review_sentiment_pairs.append({
+                "review": review.review,
+                "sentiment": review.sentiment  # Assuming the sentiment is a property of the review object
+            })
+        
+        return HttpResponse(json.dumps(review_sentiment_pairs))
 
+#----------------------------------------------------------------------------------------------------------------------
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
-# ...
+# in the add_review view method:
+# First check if user is authenticated because only authenticated users can post reviews for a dealer.
+# Create a dictionary object called review to append keys like
+# (time, name, dealership, review, purchase) and any attributes you defined in your review-post cloud function.
+def add_review(request, dealer_id):
+        # Check if user is authenticated
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden("You must be authenticated to add a review")
+        elif request.method == "POST":
+            url = "http://127.0.0.1:5000/api/post_review"
+            # Create a dictionary object called review to append keys like
+            # (time, name, dealership, review, purchase) and any attributes you defined in your review-post cloud function.
+            # required_fields = ['id', 'name', 'dealership', 'review', 'purchase', 'purchase_date', 'car_make', 'car_model', 'car_year']
+            review = {}
+            review["id"] = request.user.id
+            review["name"] = request.user.username
+            review["dealership"] = dealer_id
+            review["review"] = "This is a great car dealer"
+            review["purchase"] = True
+            review["purchase_date"] = datetime.utcnow().isoformat()
+            review["car_make"] = "Toyota"
+            review["car_model"] = "Camry"
+            review["car_year"] = 2022
 
+            # Call post_request() with specified arguments
+            #json_payload = {}
+            #json_payload["review"] = review
+            result = post_request(url, json_payload=review, dealerId=dealer_id)
+
+            if result is not None:
+                if 'message' in result:
+                    success_message = result['message']
+                    return HttpResponse(success_message)
+                else:
+                    return HttpResponseServerError("Invalid 'message' field in server response.")
+            else:
+                return HttpResponseServerError("Server response is not valid JSON.")
+
+            
