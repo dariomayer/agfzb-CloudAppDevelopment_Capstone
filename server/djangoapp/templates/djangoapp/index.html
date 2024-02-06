@@ -43,9 +43,38 @@
         </div>
     </nav>
 
-
-
     <!--Add a dealer table here -->
+    <!--create a Bootstrap table <table> under <nav> bar.
+        For the table head <thead>, add a table row <tr> with following table header cells <th> represents the dealer attribute names:
+        ID, Dealer Name, City, Address, Zip, State.
+        For the table body <tbody>, add a <tr> for each dealer object in dealership_list. -->
+        <table class="table" id="table" data-filter-control="true">
+            <thead>
+                <tr>
+                    <th data-field="id">ID</th>
+                    <th data-field="name">Dealer Name</th>
+                    <th data-field="city">City</th>
+                    <th data-field="address">Address</th>
+                    <th data-field="zip">Zip</th>
+                    <th data-field="state" data-filter-control="select">State</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dealer in dealerships %}
+                    <tr>
+                        <td>{{dealer.id}}</td>
+                        <td><a href="{% url 'djangoapp:dealer_details' dealer.id %}">{{dealer.full_name}}</a></td>
+                        <td>{{dealer.city}}</td>
+                        <td>{{dealer.address}}</td>
+                        <td>{{dealer.zip}}</td>
+                        <td>{{dealer.st}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    
+
     <!-- add a footer fixed at the bottom-->
     <footer class="footer mt-auto py-3 bg-light fixed-bottom text-right">
         <div class="container">
@@ -56,5 +85,11 @@
     </footer>
 
     </body>
+    <!-- Add JavaScript snippet to turn-on filter control for the table element. -->
+    <script>
+        $(function() {
+          $('#table').bootstrapTable()
+        })
+      </script>
 
 </html>

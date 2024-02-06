@@ -5,7 +5,7 @@ import atexit
 
 #Add your Cloudant service credentials here
 cloudant_username = '5e1aec0e-af72-45b6-a54e-3bd6c62ad460-bluemix'
-cloudant_api_key = 'LPXIwY_Wk0SrZhbFUHdshqrn6rBXRlrenZ6pbcT0EDZV'
+cloudant_api_key = ''
 cloudant_url = 'https://5e1aec0e-af72-45b6-a54e-3bd6c62ad460-bluemix.cloudantnosqldb.appdomain.cloud'
 client = Cloudant.iam(cloudant_username, cloudant_api_key, connect=True, url=cloudant_url)
 
@@ -24,7 +24,7 @@ from flask import request, jsonify
 def get_reviews(dealer_id=None):
     if dealer_id is None:
         # Accetta l'id come stato (query parameter)
-        dealer_id = request.args.get('id')
+        dealer_id = request.args.get('id') or request.args.get('dealerId')
 
     # Check if "id" parameter is missing
     if dealer_id is None:
