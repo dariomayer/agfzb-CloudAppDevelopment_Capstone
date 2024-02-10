@@ -16,13 +16,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.js"></script>
   </head>
   <body>
-    <form action="{% url 'djangoapp:add_review' %}" method="post">
+    <form
+      action="{% url 'djangoapp:add_review' dealer_id=dealer.id %}"
+      method="post"
+    >
       <div class="container">
         <!--Style root div with .container class -->
         {% csrf_token %}
         <h1>Add a review about <b>{{ dealer.full_name }}</b></h1>
         <hr />
         <div class="form-group">
+          <input type="hidden" name="id" value="{{ request.user.id }}" />
+          <input
+            type="hidden"
+            name="name"
+            value="{{ request.user.username }}"
+          />
+          <input type="hidden" name="dealership" value="{{ dealer.id }}" />
           <label for="content"><b>Enter the review content:</b></label>
           <textarea
             class="form-control"
@@ -42,20 +52,27 @@
             ><b>Select your car model (model-make-year)</b></label
           >
           <select name="car" id="car" class="form-select" required>
-            {% for car in cars %}
-            <option selected value="{{car.id}}">
-              {{car.name}}-{{car.make.name}}-{{ car.year|date:"Y" }}
+            {% for car in cars %} {% if car.id == 6 %}
+            <option selected value="{{ car.id }}">
+              {{ car.name }}-{{ car.make.name }}-{{ car.year|date:"Y" }}
             </option>
-            {% endfor %}</select
+            {% else %}
+            <option value="{{ car.id }}">
+              {{ car.name }}-{{ car.make.name }}-{{ car.year|date:"Y" }}
+            </option>
+            {% endif %} {% endfor %}</select
           ><br />
           <label for="purchasedate"><b>Select Your Puchase Date</b></label>
           <input
-            class="date-own form-control "
-            style="width: fit-content;"
+            class="date-own form-control"
+            style="width: fit-content"
             type="text"
             name="purchasedate"
             id="purchasedate"
           />
+          <input type="hidden" id="car_make" name="car_make" value="" />
+          <input type="hidden" id="car_model" name="car_model" value="" />
+          <input type="hidden" id="car_year" name="car_year" value="" />
 
           {% if message %}
           <div class="alert alert-warning">
@@ -63,7 +80,7 @@
             {{ message }}
           </div>
           {% endif %}
-          <button class="btn btn-primary mt-3" type="submit">Sign up</button>
+          <button class="btn btn-primary mt-3" type="submit">Submit</button>
           <!--Style button with .btn and .btn-primary class -->
         </div>
       </div>
@@ -72,6 +89,23 @@
   <script type="text/javascript">
     $(".date-own").datepicker({
       format: "mm/dd/yyyy",
+    });
+  </script>
+  <script>
+    // Aggiungi un gestore di eventi per l'evento change della select input
+    document.getElementById("car").addEventListener("change", function () {
+      // Ottieni il valore selezionato dalla select input
+      var selectedCarId = this.value;
+      // Ottieni l'opzione selezionata
+      var selectedOption = this.options[this.selectedIndex];
+      // Ottieni il testo dell'opzione selezionata
+      var selectedOptionText = selectedOption.text;
+      // Dividi il testo dell'opzione selezionata usando il separatore "-"
+      var parts = selectedOptionText.split("-");
+      // Assegna i valori divisi ai campi di input nascosti
+      document.getElementById("car_make").value = parts[1].trim(); // Assumi che il make sia il secondo elemento dopo la divisione
+      document.getElementById("car_model").value = parts[0].trim(); // Assumi che il modello sia il primo elemento dopo la divisione
+      document.getElementById("car_year").value = parts[2].trim(); // Assumi che l'anno sia il terzo elemento dopo la divisione
     });
   </script>
 </html>

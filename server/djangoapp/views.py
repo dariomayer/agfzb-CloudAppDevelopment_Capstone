@@ -178,15 +178,15 @@ def add_review(request, dealer_id):
                 # (time, name, dealership, review, purchase) and any attributes you defined in your review-post cloud function.
                 # required_fields = ['id', 'name', 'dealership', 'review', 'purchase', 'purchase_date', 'car_make', 'car_model', 'car_year']
                 review = {}
-                review["id"] = request.user.id
-                review["name"] = request.user.username
+                review["id"] = request.POST['id']
+                review["name"] = request.POST['name']
                 review["dealership"] = dealer_id
-                review["review"] = "This is a great car dealer"
-                review["purchase"] = True
-                review["purchase_date"] = datetime.utcnow().isoformat()
-                review["car_make"] = "Toyota"
-                review["car_model"] = "Camry"
-                review["car_year"] = 2022
+                review["review"] = request.POST['content']
+                review["purchase"] = request.POST.get('purchasecheck')== 'on'
+                review["purchase_date"] = request.POST['purchasedate']
+                review["car_make"] = request.POST['car_make']
+                review["car_model"] = request.POST['car_model']
+                review["car_year"] = request.POST['car_year']
                 result = post_request(url, json_payload=review, dealerId=dealer_id)
 
                 if result is not None:

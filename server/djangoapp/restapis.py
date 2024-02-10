@@ -152,7 +152,7 @@ def analyze_review_sentiments(dealerreview):
     }
 
     # Chiama la funzione get_request per ottenere l'analisi delle recensioni
-    api_key = "S-_aUn1lR_nFT8Tnajvttdvkbk33ksaQOsZoKGDwsEMd"
+    api_key = ""
     response = get_request(url, api_key=api_key, **params)
     sentiment_label=response["sentiment"]["document"]["label"]
     
